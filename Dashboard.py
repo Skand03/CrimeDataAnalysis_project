@@ -10,13 +10,23 @@ st.set_page_config(layout="wide", page_title="Indian Crime Analysis", page_icon=
 
 @st.cache_data
 def load_data(file):
-    df = pd.read_csv(file)
+    df = pd.read_csv(file, low_memory=False)
+
+    # Convert date columns
     for col in ['Date Reported', 'Date of Occurrence', 'Date Case Closed']:
         if col in df.columns:
             try:
                 df[col] = pd.to_datetime(df[col], errors='coerce', format='%d-%m-%Y %H:%M')
             except ValueError:
                 df[col] = pd.to_datetime(df[col], errors='coerce')  # Try default parsing
+
+    # Convert 'Victim Age' to numeric, coerce errors (non-numeric values become NaN)
+    if 'Victim Age' in df.columns:
+        df['Victim Age'] = pd.to_numeric(df['Victim Age'], errors='coerce')
+
+    # Drop rows where 'Victim Age' is NaN (optional - depending on your needs)
+    df = df.dropna(subset=['Victim Age'])
+
     return df
 
 
